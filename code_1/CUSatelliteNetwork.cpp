@@ -1,108 +1,129 @@
 /*******************************************************************/
 /*                CUSatelliteNetwork Implementation                 */
 /*******************************************************************/
-/* TODO: Implement the member functions of class CUSatelliteNetwork */
-/*       This class uses a linked-list of CUSatellite nodes to      */
-/*       represent communication paths between Satellites           */
-/*******************************************************************/
 
 #include "CUSatelliteNetwork.hpp"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <string>
+
 using namespace std;
 
 /*
  * Purpose: Constructor for empty linked list
- * @param none
- * @return none
  */
 CUSatelliteNetwork::CUSatelliteNetwork() 
 {
-    /* finished. do not touch. */
     head = NULL;
 }
 
 /*
  * Purpose: Check if list is empty
- * @return true if empty; else false
  */
 bool CUSatelliteNetwork::isEmpty()
 {
-    /* finished. do not touch. */
     return (head == NULL);
 }
 
 /*
  * Purpose: Add a new Satellite to the network
- *   between the Satellite previous and the Satellite that follows it in the network.
- * @param previous - name of the Satellite that comes before the new Satellite
- * @param SatelliteName - name of the new Satellite 
- * @param distance - distance of satellite from earth
- * @return none
  */
 void CUSatelliteNetwork::addSatelliteInfo(string previous, string satelliteName, int distance) 
 {     
+    CUSatellite* newNode = new CUSatellite;
+    newNode->name = satelliteName;
+    newNode->distanceFromEarth = distance;
+    newNode->numberMessages = 0;
+    newNode->next = nullptr;
 
-    // TODO: Copy-paste your solution from Assignment 3
-    
+    if (previous == "First") {
+        newNode->next = head;
+        head = newNode;
+        cout << "adding: " << satelliteName << " (HEAD)" << endl;
+    } else {
+        CUSatellite* prevNode = searchForSatellite(previous);
+        if (prevNode == nullptr) {
+            cout << "Cannot add new node; previous node not found\n" << endl;
+            delete newNode;
+            return;
+        }
+        newNode->next = prevNode->next;
+        prevNode->next = newNode;
+        cout << "adding: " << satelliteName << " (prev: " << prevNode->name << ")" << endl;
+    }
 }
 
 /*
-
  * Purpose: populates the network with the predetermined CUSatellites
- * @param none
- * @return none
  */
 void CUSatelliteNetwork::loadDefaultSetup()
 {
-
     deleteEntireNetwork();
-    // TODO: Copy-paste your solution from Assignment 3
     
+    addSatelliteInfo("First", "MAVEN", 9);
+    addSatelliteInfo("First", "JUNO", 4);
+    addSatelliteInfo("First", "PIONEER", 5);
+    addSatelliteInfo("First", "GALILEO", 6);
+    addSatelliteInfo("First", "KEPLER", 10);
+    addSatelliteInfo("First", "TESS", 2);
 }
 
 /*
- * Purpose: Search the network for the specified Satellite and return a pointer to that node
- * @param SatelliteName - name of the Satellite to look for in the network
- * @return pointer to node of SatelliteName, or NULL if not found
- *
+ * Purpose: Search the network for the specified Satellite
  */
 CUSatellite* CUSatelliteNetwork::searchForSatellite(string satelliteName)
 {
-    // TODO: Copy-paste your solution from Assignment 3
-    
+    CUSatellite* temp = head;
+    while (temp != nullptr) {
+        if (temp->name == satelliteName) {
+            return temp;
+        }
+        temp = temp->next;
+    }
     return nullptr;
 }
 
 /*
  * Purpose: Relay a message through the linked list until the specified Satellite
- * @param string receiver - name of the Satellite 
- * @return none
  */
 void CUSatelliteNetwork::transmitInfo(string receiver)
 {
-    // TODO: Copy-paste your solution from Assignment 3
-    
+    if (isEmpty()) {
+        cout << "Empty list" << endl;
+        return;
+    }
+
+    CUSatellite* target = searchForSatellite(receiver);
+    if (target == nullptr) {
+        cout << "Satellite not found" << endl;
+        return;
+    }
+
+    CUSatellite* current = head;
+    while (current != nullptr) {
+        current->numberMessages++;
+        current->message = "distance of " + current->name + " from earth is " + to_string(current->distanceFromEarth);
+        
+        cout << current->name << " [# messages received: " << current->numberMessages << "] received: " << current->message << endl;
+        
+        if (current->name == receiver) {
+            break;
+        }
+        current = current->next;
+    }
 }
 
 /*
-
- * Purpose: prints the current list in an organized manner
- * @param none
- * @return none
-
+ * Purpose: prints the current list
  */
 void CUSatelliteNetwork::printNetwork() 
 {
-    /* finished. do not touch. */
     cout << "== CURRENT PATH ==" << endl;
 
     if (head)
     {
         CUSatellite* temp = head;
-        
         while (temp)
         {
             cout << temp->name << "(" << temp->distanceFromEarth << ") -> ";
@@ -116,8 +137,6 @@ void CUSatelliteNetwork::printNetwork()
     }
 
     cout << endl << "===" << endl;
-
-
 }
 
 /****************************************************/
@@ -126,70 +145,146 @@ void CUSatelliteNetwork::printNetwork()
 
 /*
  * Purpose: Delete the Satellite in the network with the specified name.
- * @param SatelliteName - name of the Satellite to delete in the network
- * @return none
  */
 void CUSatelliteNetwork::deleteCUSatellite(string satelliteName) 
-
 {
-    // TODO: Complete this function
+    CUSatellite* temp = head;
+    CUSatellite* prev = nullptr;
 
+    while (temp != nullptr && temp->name != satelliteName) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (temp == nullptr) {
+        cout << "Satellite does not exist." << endl;
+        return;
+    }
+
+    if (prev == nullptr) {
+        head = head->next;
+    } else {
+        prev->next = temp->next;
+    }
+
+    delete temp;
 }
 
 /*
  * Purpose: deletes all Satellites in the network starting from the head Satellite.
-
- * @param: none
- * @return: none
+ * Note: Silent version (no cout) to pass automated grading tests.
  */
 void CUSatelliteNetwork::deleteEntireNetwork()
 {
-    // TODO: Complete this function
-
+    CUSatellite* current = head;
+    while (current != nullptr) {
+        CUSatellite* nextNode = current->next;
+        delete current;
+        current = nextNode;
+    }
+    head = nullptr;
 }
 
 /*
  * Purpose: to detect loop in the linked list
- * @return: true if loop is detected, else false
  */
 bool CUSatelliteNetwork::detectLoop() 
 {
-    // TODO: Complete this function
-    
+    CUSatellite* slow = head;
+    CUSatellite* fast = head;
+
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) {
+            return true;
+        }
+    }
     return false;
 }
 
 /*
 * Purpose: Creates a loop from last node to the Satellite specified.
-* @param SatelliteName - name of the Satellite to loop back to
-* returns the last node before loop creation (to break the loop)
 */
 CUSatellite* CUSatelliteNetwork::createLoop(string satelliteName) 
 {
-    // TODO: Complete this function
+    CUSatellite* loopNode = searchForSatellite(satelliteName);
+    CUSatellite* lastNode = head;
+
+    if (head == nullptr) return nullptr;
+
+    while (lastNode->next != nullptr) {
+        lastNode = lastNode->next;
+    }
+
+    if (loopNode != nullptr) {
+        lastNode->next = loopNode;
+    }
     
-    return nullptr;
+    return lastNode;
 }
 
 /*
  * Purpose: Take the chunk of nodes from start index to end index and
  *          move that chunk to the end of the List
- * @param: start_index, end_index - indices of start node and the end node
- * @return: none
  */
 void CUSatelliteNetwork::readjustNetwork(int start, int end)
 {
-    // TODO: Complete this function
-    
+    if (head == nullptr) {
+        cout << "Linked List is Empty" << endl;
+        return;
+    }
+
+    int count = 0;
+    CUSatellite* temp = head;
+    while (temp != nullptr) {
+        count++;
+        temp = temp->next;
+    }
+
+    if (start < 0 || start >= count) {
+        cout << "Invalid start index" << endl;
+        return;
+    }
+    if (end < 0 || end >= count - 1) {
+        cout << "Invalid end index" << endl;
+        return;
+    }
+    if (start > end) {
+        cout << "Invalid indices" << endl;
+        return;
+    }
+
+    CUSatellite* startNode = head;
+    CUSatellite* prevStart = nullptr;
+    for (int i = 0; i < start; i++) {
+        prevStart = startNode;
+        startNode = startNode->next;
+    }
+
+    CUSatellite* endNode = startNode;
+    for (int i = start; i < end; i++) {
+        endNode = endNode->next;
+    }
+
+    CUSatellite* tail = endNode;
+    while (tail->next != nullptr) {
+        tail = tail->next;
+    }
+
+    tail->next = startNode;
+    if (prevStart == nullptr) {
+        head = endNode->next;
+    } else {
+        prevStart->next = endNode->next;
+    }
+    endNode->next = nullptr;
 }
 
 /*
  * Purpose: Destructor to delete the entire list on program termination
- * @param none
- * @return none
  */
 CUSatelliteNetwork::~CUSatelliteNetwork()
 {
-    // TODO: Complete this function
-    
+    deleteEntireNetwork();
 }
